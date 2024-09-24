@@ -202,6 +202,54 @@ func (hp *HunterPet) newLightningBreath() *core.Spell {
 	})
 }
 
+func (hp *HunterPet) newLavaBreath() *core.Spell {
+	baseDamageMin := map[int32]float64{
+		25: 78,
+		40: 78,
+		50: 78,
+		60: 101,
+	}[hp.Owner.Level]
+
+	baseDamageMax := map[int32]float64{
+		25: 91,
+		40: 91,
+		50: 91,
+		60: 116,
+	}[hp.Owner.Level]
+
+	spellID := map[int32]int32{
+		25: 444678,
+		40: 444678, // rank 4 not available in SoD Phase 2
+		50: 444678,
+		60: 444681,
+	}[hp.Owner.Level]
+
+	return hp.RegisterSpell(core.SpellConfig{
+		ActionID:    core.ActionID{SpellID: spellID},
+		SpellSchool: core.SpellSchoolFire,
+		DefenseType: core.DefenseTypeMagic,
+		ProcMask:    core.ProcMaskSpellDamage,
+
+		FocusCost: core.FocusCostOptions{
+			Cost: 50,
+		},
+		Cast: core.CastConfig{
+			DefaultCast: core.Cast{
+				GCD: PetGCD,
+			},
+			IgnoreHaste: true,
+		},
+
+		DamageMultiplier: 1,
+		ThreatMultiplier: 1,
+
+		ApplyEffects: func(sim *core.Simulation, target *core.Unit, spell *core.Spell) {
+			baseDamage := sim.Roll(baseDamageMin, baseDamageMax) + (spell.MeleeAttackPower() * 3.65 / 14)
+
+			spell.CalcAndDealDamage(sim, target, baseDamage, spell.OutcomeMagicHitAndCrit)
+		},
+	})
+}
 // func (hp *HunterPet) newDemoralizingScreech() *core.Spell {
 // 	//debuffs := hp.NewEnemyAuraArray(core.DemoralizingScreechAura)
 
